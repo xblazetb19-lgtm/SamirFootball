@@ -9,101 +9,179 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:#060a06;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;color:#fff;}
-.logo{font-family:'Bebas Neue',sans-serif;font-size:46px;letter-spacing:10px;margin-bottom:4px;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:44px;letter-spacing:8px;margin-bottom:2px;}
 .logo span{color:#2ecc4a;}
-.tag{font-size:11px;letter-spacing:5px;color:rgba(255,255,255,0.2);margin-bottom:24px;}
+.tag{font-size:10px;letter-spacing:4px;color:rgba(255,255,255,0.2);margin-bottom:16px;}
 
-#lobby{width:560px;display:flex;flex-direction:column;gap:16px;}
+/* NAV */
+.nav{display:flex;gap:0;border-bottom:2px solid rgba(255,255,255,0.08);margin-bottom:16px;width:100%;}
+.navbtn{padding:9px 22px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:rgba(255,255,255,0.3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;}
+.navbtn:hover{color:rgba(255,255,255,0.7);}
+.navbtn.active{color:#fff;border-bottom-color:#2ecc4a;}
 
-/* Lien */
-#share-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(46,204,74,0.06);border:1px solid rgba(46,204,74,0.2);border-radius:8px;}
-#share-url{font-size:11px;color:#2ecc4a;flex:1;word-break:break-all;}
-#share-bar button{padding:5px 12px;background:transparent;border:1px solid rgba(46,204,74,0.3);border-radius:5px;color:#2ecc4a;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;cursor:pointer;}
+/* COINS */
+.coin-bar{display:flex;align-items:center;gap:8px;padding:7px 14px;background:rgba(240,192,64,0.1);border:1px solid rgba(240,192,64,0.25);border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;color:#f0c040;letter-spacing:2px;}
+.coin-bar .ci{font-size:20px;}
+
+#lobby-wrap{width:620px;display:flex;flex-direction:column;gap:12px;}
 
 /* Champs */
-.field{display:flex;flex-direction:column;gap:5px;}
+.field{display:flex;flex-direction:column;gap:4px;}
 .field label{font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.3);text-transform:uppercase;}
-input[type=text]{background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.08);border-radius:8px;padding:9px 14px;font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;color:#fff;outline:none;width:200px;}
+input[type=text]{background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 14px;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:#fff;outline:none;width:200px;}
 input[type=text]:focus{border-color:#2ecc4a;}
 .row{display:flex;gap:8px;flex-wrap:wrap;}
-.sc{padding:8px 14px;border-radius:8px;background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.08);cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;color:rgba(255,255,255,0.4);transition:all .15s;}
+.sc{padding:7px 14px;border-radius:8px;background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.08);cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;color:rgba(255,255,255,0.4);transition:all .15s;}
 .sc:hover{color:#fff;}
 .sc.sr{border-color:#e83030;color:#e83030;background:rgba(232,48,48,0.08);}
 .sc.sb{border-color:#2e7fff;color:#2e7fff;background:rgba(46,127,255,0.08);}
 
-/* Play */
-#play-btn{padding:14px 0;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:6px;background:transparent;border:2px solid #2ecc4a;color:#2ecc4a;cursor:pointer;border-radius:10px;transition:all .2s;width:100%;margin-top:4px;}
+/* Grilles sélection */
+.sg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.si{padding:7px 4px;border-radius:8px;background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.08);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all .15s;position:relative;}
+.si:hover{border-color:rgba(255,255,255,0.3);}
+.si.sel{border-color:#2ecc4a;background:rgba(46,204,74,0.08);}
+.si.locked{opacity:0.4;cursor:not-allowed;}
+.si .ic{font-size:18px;}
+.si .nm{font-family:'Bebas Neue',sans-serif;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,0.4);text-align:center;}
+.si.sel .nm{color:#2ecc4a;}
+.si .lk{position:absolute;top:2px;right:3px;font-size:9px;color:#f0c040;}
+
+#play-btn{padding:13px 0;font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:6px;background:transparent;border:2px solid #2ecc4a;color:#2ecc4a;cursor:pointer;border-radius:10px;transition:all .2s;width:100%;}
 #play-btn:hover{background:rgba(46,204,74,0.1);}
 
-/* En ligne */
-#online-box{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 14px;}
-#online-box h3{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:rgba(255,255,255,0.3);margin-bottom:8px;}
-#online-list{display:flex;flex-direction:column;gap:5px;min-height:24px;}
-.op{font-size:12px;padding:4px 0;}
-.op.rouge{color:#ff8888;}
-.op.bleu{color:#88aaff;}
+/* Online */
+#online-box{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 14px;}
+#online-box h3{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;color:rgba(255,255,255,0.3);margin-bottom:6px;}
+#online-list{display:flex;flex-direction:column;gap:4px;min-height:18px;}
+.op{font-size:12px;padding:2px 0;}
+.op.rouge{color:#ff8888;}.op.bleu{color:#88aaff;}
 #online-empty{font-size:11px;color:rgba(255,255,255,0.2);letter-spacing:2px;}
+
+/* ── BOUTIQUE ── */
+#shop-wrap{width:620px;display:none;flex-direction:column;gap:14px;}
+.shop-tabs{display:flex;gap:0;border-bottom:2px solid rgba(255,255,255,0.08);}
+.stab{padding:8px 20px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:rgba(255,255,255,0.3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;}
+.stab:hover{color:rgba(255,255,255,0.7);}
+.stab.active{color:#fff;border-bottom-color:#f0c040;}
+.shop-panel{display:none;}.shop-panel.active{display:block;}
+.shop-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px;}
+.shop-item{padding:10px 6px;border-radius:10px;background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.08);display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;}
+.shop-item .si-ic{font-size:22px;}
+.shop-item .si-nm{font-family:'Bebas Neue',sans-serif;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,0.5);text-align:center;}
+.shop-item .si-price{font-family:'Bebas Neue',sans-serif;font-size:11px;color:#f0c040;letter-spacing:1px;}
+.shop-item .si-owned{font-family:'Bebas Neue',sans-serif;font-size:10px;color:#2ecc4a;letter-spacing:1px;}
+.shop-item button{padding:4px 8px;font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:1px;border-radius:5px;cursor:pointer;border:1px solid;transition:all .15s;width:100%;}
+.shop-item button.buy-btn{background:rgba(240,192,64,0.12);border-color:rgba(240,192,64,0.4);color:#f0c040;}
+.shop-item button.buy-btn:hover{background:rgba(240,192,64,0.25);}
+.shop-item button.buy-btn:disabled{opacity:0.3;cursor:not-allowed;}
+.shop-item button.owned-btn{background:rgba(46,204,74,0.08);border-color:rgba(46,204,74,0.3);color:#2ecc4a;cursor:default;}
 
 /* ── IN-GAME ── */
 #game-wrap{display:none;flex-direction:column;align-items:center;background:#000;width:100vw;min-height:100vh;justify-content:center;}
-#game-container{display:flex;justify-content:center;align-items:center;}
+#gcont{position:relative;}
 #game-container canvas{display:block;}
 #gtimer{position:absolute;top:8px;left:50%;transform:translateX(-50%);font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;background:rgba(0,0,0,0.5);padding:4px 18px;border-radius:8px;z-index:50;pointer-events:none;letter-spacing:3px;}
-#gcont{position:relative;}
 #fsbtn{position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:rgba(255,255,255,0.4);font-size:15px;cursor:pointer;padding:4px 8px;z-index:50;}
+#gcoin{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.5);border:1px solid rgba(240,192,64,0.3);border-radius:6px;color:#f0c040;font-family:'Bebas Neue',sans-serif;font-size:14px;padding:4px 10px;z-index:50;letter-spacing:2px;pointer-events:none;}
 #chat-box{position:absolute;bottom:8px;right:8px;width:200px;display:flex;flex-direction:column;z-index:50;}
 #chat-msgs{height:90px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;padding:5px 7px;background:rgba(0,0,0,0.55);border-radius:7px 7px 0 0;pointer-events:none;}
 .cl{font-size:10px;line-height:1.3;word-break:break-word;}
 .cl .cn{font-weight:700;margin-right:3px;}
-.cl.rouge .cn{color:#ff7777;}
-.cl.bleu  .cn{color:#77aaff;}
+.cl.rouge .cn{color:#ff7777;}.cl.bleu .cn{color:#77aaff;}
 .cl.sys{color:rgba(255,255,255,0.3);font-style:italic;}
 #chat-row{display:flex;}
 #chat-in{flex:1;background:rgba(0,0,0,0.65);border:1px solid rgba(255,255,255,0.1);border-right:none;border-radius:0 0 0 7px;padding:5px 8px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:11px;outline:none;}
 #chat-in::placeholder{color:rgba(255,255,255,0.2);}
 #chat-send{padding:0 9px;background:rgba(46,204,74,0.18);border:1px solid rgba(46,204,74,0.25);border-radius:0 0 7px 0;color:#2ecc4a;font-family:'Bebas Neue',sans-serif;font-size:12px;cursor:pointer;}
-#hint{display:none;font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.15);text-transform:uppercase;margin-top:6px;}
+#hint{display:none;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.15);text-transform:uppercase;margin-top:5px;}
+
+/* FIN */
+#end-screen{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:200;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+#end-screen.show{display:flex;}
+#end-title{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:8px;color:#fff;}
+#end-scores{font-family:'Bebas Neue',sans-serif;font-size:80px;letter-spacing:14px;color:#fff;}
+#end-winner{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:5px;}
+#end-winner.rouge{color:#e83030;}#end-winner.bleu{color:#2e7fff;}#end-winner.egalite{color:#f0c040;}
+#end-coins{font-family:'Bebas Neue',sans-serif;font-size:18px;color:#f0c040;letter-spacing:3px;}
+#play-again-btn{padding:12px 44px;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:5px;background:transparent;border:2px solid #2ecc4a;color:#2ecc4a;cursor:pointer;border-radius:10px;transition:all .2s;}
+#play-again-btn:hover{background:rgba(46,204,74,0.1);}
+
+/* Coin anim */
+.coin-popup{position:fixed;font-family:'Bebas Neue',sans-serif;font-size:22px;color:#f0c040;font-weight:bold;pointer-events:none;z-index:300;animation:coinPop 1.2s forwards;}
+@keyframes coinPop{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-60px) scale(1.4);}}
 </style>
 </head>
 <body>
 
-<div id="lobby">
+<!-- ══ LOBBY ══ -->
+<div id="lobby-wrap">
   <div class="logo">FOOT <span>INSOLITE</span></div>
   <div class="tag">Le beau jeu, en mode insolite</div>
 
-  <div id="share-bar">
-    <span style="font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.3);">LIEN :</span>
-    <span id="share-url"></span>
-    <button onclick="copyLink()">📋 Copier</button>
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <div class="nav" style="border:none;margin:0;gap:0;">
+      <div class="navbtn active" onclick="showPage('lobby')">⚽ JOUER</div>
+      <div class="navbtn" onclick="showPage('shop')">🛒 BOUTIQUE</div>
+    </div>
+    <div class="coin-bar"><span class="ci">🪙</span><span id="coin-display">0</span> SAMIR COINS</div>
   </div>
 
+  <!-- PROFIL -->
   <div class="field">
     <label>Pseudo</label>
     <input type="text" id="pseudo" maxlength="14" placeholder="Ton pseudo…"/>
   </div>
-
   <div class="field">
-    <label>Équipe — choisissez des équipes différentes !</label>
+    <label>Équipe</label>
     <div class="row">
       <div class="sc sr" data-t="rouge" onclick="selTeam(this)">🔴 ROUGE</div>
       <div class="sc"    data-t="bleu"  onclick="selTeam(this)">🔵 BLEU</div>
     </div>
   </div>
+  <div class="field">
+    <label>Dribble (F)</label>
+    <div class="sg" id="sel-drib"></div>
+  </div>
+  <div class="field">
+    <label>Célébration</label>
+    <div class="sg" id="sel-celeb"></div>
+  </div>
 
   <div id="online-box">
     <h3>JOUEURS EN LIGNE</h3>
-    <div id="online-list">
-      <div id="online-empty">Aucun joueur connecté</div>
-    </div>
+    <div id="online-list"><div id="online-empty">Aucun joueur</div></div>
   </div>
-
   <button id="play-btn" onclick="startGame()">⚽ JOUER</button>
 </div>
 
+<!-- ══ BOUTIQUE ══ -->
+<div id="shop-wrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <div class="nav" style="border:none;margin:0;">
+      <div class="navbtn" onclick="showPage('lobby')">⚽ JOUER</div>
+      <div class="navbtn active" onclick="showPage('shop')">🛒 BOUTIQUE</div>
+    </div>
+    <div class="coin-bar"><span class="ci">🪙</span><span id="coin-display2">0</span> SAMIR COINS</div>
+  </div>
+  <div class="shop-tabs">
+    <div class="stab active" onclick="showShopTab('drib')">DRIBBLES</div>
+    <div class="stab" onclick="showShopTab('celeb')">CÉLÉBRATIONS</div>
+  </div>
+  <div class="shop-panel active" id="shop-drib">
+    <div class="shop-grid" id="shop-drib-grid"></div>
+  </div>
+  <div class="shop-panel" id="shop-celeb">
+    <div class="shop-grid" id="shop-celeb-grid"></div>
+  </div>
+</div>
+
+<!-- ══ IN-GAME ══ -->
 <div id="game-wrap">
   <div id="gcont">
     <div id="game-container"></div>
     <div id="gtimer">5:00</div>
+    <div id="gcoin">🪙 0</div>
     <button id="fsbtn" onclick="toggleFS()">⛶</button>
     <div id="chat-box">
       <div id="chat-msgs"></div>
@@ -113,39 +191,198 @@ input[type=text]:focus{border-color:#2ecc4a;}
       </div>
     </div>
   </div>
-  <div id="hint">ESPACE · Tir | CLIC · Vers curseur | E · Lob | F · Dribble | SHIFT · Sprint</div>
+  <div id="hint">ESPACE · Tir vers curseur | CLIC · Tir courbe | E · Lob | F · Dribble | SHIFT · Sprint</div>
+</div>
+
+<!-- ══ FIN ══ -->
+<div id="end-screen">
+  <div id="end-title">TEMPS ÉCOULÉ</div>
+  <div id="end-scores">0 - 0</div>
+  <div id="end-winner" class="egalite">ÉGALITÉ !</div>
+  <div id="end-coins">+0 🪙 SAMIR COINS</div>
+  <button id="play-again-btn" onclick="playAgain()">🔄 REJOUER</button>
 </div>
 
 <script>
 const socket = io();
-let playerTeam = 'rouge';
+let playerTeam='rouge', playerCeleb='cool', playerDribble='virgule';
 
-// Lien
-document.getElementById('share-url').textContent = window.location.origin;
-function copyLink(){
-    navigator.clipboard.writeText(window.location.origin);
-    document.querySelector('#share-bar button').textContent='✓ Copié !';
-    setTimeout(()=>document.querySelector('#share-bar button').textContent='📋 Copier',2000);
+// ── COINS ─────────────────────────────────────
+let coins = parseInt(localStorage.getItem('samircoins')||'0');
+let ownedDribs = JSON.parse(localStorage.getItem('ownedDribs')||'["virgule","roulette","crochet","passement","spin"]');
+let ownedCelebs = JSON.parse(localStorage.getItem('ownedCelebs')||'["cool","fire","scroll"]');
+
+function saveData(){
+    localStorage.setItem('samircoins', coins);
+    localStorage.setItem('ownedDribs', JSON.stringify(ownedDribs));
+    localStorage.setItem('ownedCelebs', JSON.stringify(ownedCelebs));
+}
+function addCoins(n){
+    coins+=n;saveData();updateCoinUI();
+    // Animation popup
+    const el=document.createElement('div');
+    el.className='coin-popup';el.textContent='+'+n+' 🪙';
+    el.style.left=(window.innerWidth/2-40)+'px';
+    el.style.top=(window.innerHeight/2)+'px';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),1300);
+}
+function updateCoinUI(){
+    document.getElementById('coin-display').textContent=coins;
+    document.getElementById('coin-display2').textContent=coins;
+    document.getElementById('gcoin').textContent='🪙 '+coins;
+}
+updateCoinUI();
+
+// ── CATALOGUE DRIBBLES (30) ───────────────────
+const ALL_DRIBS=[
+    {id:'virgule',icon:'〽️',name:'Virgule',price:0},
+    {id:'roulette',icon:'🌀',name:'Roulette',price:0},
+    {id:'crochet',icon:'🦶',name:'Crochet',price:0},
+    {id:'passement',icon:'👟',name:'Passement',price:0},
+    {id:'spin',icon:'🔄',name:'Spin',price:0},
+    {id:'sombrero',icon:'🎩',name:'Sombrero',price:30},
+    {id:'petitpont',icon:'🚪',name:'Petit Pont',price:30},
+    {id:'doublecontact',icon:'⚡',name:'Dbl Contact',price:30},
+    {id:'feinte',icon:'🎭',name:'Feinte',price:30},
+    {id:'rainbow',icon:'🌈',name:'Rainbow',price:30},
+    {id:'elastico',icon:'🌪️',name:'Elastico',price:30},
+    {id:'stepover',icon:'💫',name:'Step Over',price:30},
+    {id:'hocus',icon:'🎪',name:'Hocus Pocus',price:30},
+    {id:'akka',icon:'🔃',name:'Akka',price:30},
+    {id:'berba',icon:'🎯',name:'Berba Spin',price:30},
+    {id:'snake',icon:'🐍',name:'Snake',price:30},
+    {id:'scoop',icon:'🥄',name:'Scoop Turn',price:30},
+    {id:'lamamou',icon:'🦾',name:'La Mamou',price:30},
+    {id:'rabona',icon:'🎸',name:'Rabona',price:30},
+    {id:'heel',icon:'👡',name:'Heel Flick',price:30},
+    {id:'maradona',icon:'🕺',name:'Maradona',price:30},
+    {id:'cr7',icon:'⚡',name:'CR7 Chop',price:30},
+    {id:'neymar',icon:'🌟',name:'Neymar Shake',price:30},
+    {id:'mbappe',icon:'💨',name:'Mbappe Cut',price:30},
+    {id:'pogba',icon:'💃',name:'Pogba Turn',price:30},
+    {id:'iniesta',icon:'🧠',name:'Iniesta',price:30},
+    {id:'zizou',icon:'👑',name:'Zizou 360',price:30},
+    {id:'ronaldinho',icon:'😁',name:'R10 Ginga',price:30},
+    {id:'pele',icon:'🏆',name:'Pelé Flip',price:30},
+    {id:'messi',icon:'🐐',name:'Messi Drib',price:30},
+];
+
+// ── CATALOGUE CÉLÉBRATIONS (30) ──────────────
+const ALL_CELEBS=[
+    {id:'cool',icon:'😎',name:'Cool',price:0},
+    {id:'fire',icon:'🥵',name:'Fire',price:0},
+    {id:'scroll',icon:'📜',name:'Scroll',price:0},
+    {id:'pick',icon:'⛏️',name:'Pick',price:30},
+    {id:'money',icon:'💵',name:'Money',price:30},
+    {id:'dance',icon:'🕺',name:'Dance',price:30},
+    {id:'salute',icon:'🫡',name:'Salute',price:30},
+    {id:'dab',icon:'🤙',name:'Dab',price:30},
+    {id:'robot',icon:'🤖',name:'Robot',price:30},
+    {id:'kiss',icon:'😘',name:'Kiss',price:30},
+    {id:'muscle',icon:'💪',name:'Muscle',price:30},
+    {id:'trophy',icon:'🏆',name:'Trophy',price:30},
+    {id:'crown',icon:'👑',name:'Crown',price:30},
+    {id:'rocket',icon:'🚀',name:'Rocket',price:30},
+    {id:'lightning',icon:'⚡',name:'Lightning',price:30},
+    {id:'ghost',icon:'👻',name:'Ghost',price:30},
+    {id:'ninja',icon:'🥷',name:'Ninja',price:30},
+    {id:'dragon',icon:'🐉',name:'Dragon',price:30},
+    {id:'volcano',icon:'🌋',name:'Volcano',price:30},
+    {id:'explosion',icon:'💥',name:'Explosion',price:30},
+    {id:'diamond',icon:'💎',name:'Diamond',price:30},
+    {id:'alien',icon:'👽',name:'Alien',price:30},
+    {id:'wizard',icon:'🧙',name:'Wizard',price:30},
+    {id:'phoenix',icon:'🦅',name:'Phoenix',price:30},
+    {id:'storm',icon:'⛈️',name:'Storm',price:30},
+    {id:'star',icon:'🌟',name:'Superstar',price:30},
+    {id:'snow',icon:'❄️',name:'Ice Cold',price:30},
+    {id:'sakura',icon:'🌸',name:'Sakura',price:30},
+    {id:'sword',icon:'⚔️',name:'Warrior',price:30},
+    {id:'galaxy',icon:'🌌',name:'Galaxy',price:30},
+];
+
+// ── NAVIGATION ───────────────────────────────
+function showPage(p){
+    document.getElementById('lobby-wrap').style.display=p==='lobby'?'flex':'none';
+    document.getElementById('shop-wrap').style.display=p==='shop'?'flex':'none';
+    if(p==='shop') buildShop();
+}
+function showShopTab(t){
+    document.querySelectorAll('.stab').forEach((b,i)=>b.classList.toggle('active',i===(t==='drib'?0:1)));
+    document.querySelectorAll('.shop-panel').forEach((p,i)=>p.classList.toggle('active',i===(t==='drib'?0:1)));
 }
 
-function selTeam(el){
-    playerTeam=el.dataset.t;
-    document.querySelectorAll('[data-t]').forEach(e=>e.className='sc');
-    el.classList.add(playerTeam==='rouge'?'sr':'sb');
+// ── BUILD SÉLECTEURS LOBBY ────────────────────
+function buildSelectors(){
+    // Dribbles possédés
+    const sd=document.getElementById('sel-drib');sd.innerHTML='';
+    ALL_DRIBS.filter(d=>ownedDribs.includes(d.id)).forEach(d=>{
+        const el=document.createElement('div');
+        el.className='si'+(d.id===playerDribble?' sel':'');
+        el.innerHTML=`<span class="ic">${d.icon}</span><div class="nm">${d.name}</div>`;
+        el.onclick=()=>{playerDribble=d.id;document.querySelectorAll('#sel-drib .si').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');};
+        sd.appendChild(el);
+    });
+    // Célébrations possédées
+    const sc=document.getElementById('sel-celeb');sc.innerHTML='';
+    ALL_CELEBS.filter(c=>ownedCelebs.includes(c.id)).forEach(c=>{
+        const el=document.createElement('div');
+        el.className='si'+(c.id===playerCeleb?' sel':'');
+        el.innerHTML=`<span class="ic">${c.icon}</span><div class="nm">${c.name}</div>`;
+        el.onclick=()=>{playerCeleb=c.id;document.querySelectorAll('#sel-celeb .si').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');};
+        sc.appendChild(el);
+    });
+}
+buildSelectors();
+
+// ── BUILD BOUTIQUE ────────────────────────────
+function buildShop(){
+    const dg=document.getElementById('shop-drib-grid');dg.innerHTML='';
+    ALL_DRIBS.forEach(d=>{
+        const owned=ownedDribs.includes(d.id);
+        const el=document.createElement('div');el.className='shop-item';
+        const canBuy=!owned&&coins>=d.price;
+        el.innerHTML=`<span class="si-ic">${d.icon}</span><div class="si-nm">${d.name}</div>${owned?'<div class="si-owned">✓ POSSÉDÉ</div>':d.price===0?'<div class="si-owned">GRATUIT</div>':`<div class="si-price">🪙 ${d.price}</div>`}<button class="${owned||d.price===0?'owned-btn':'buy-btn'}" ${owned||d.price===0?'disabled':''}>${owned||d.price===0?'✓':'ACHETER'}</button>`;
+        if(!owned&&d.price>0){
+            el.querySelector('button').onclick=()=>buyItem('drib',d.id,d.price,d.name);
+        }
+        dg.appendChild(el);
+    });
+    const cg=document.getElementById('shop-celeb-grid');cg.innerHTML='';
+    ALL_CELEBS.forEach(c=>{
+        const owned=ownedCelebs.includes(c.id);
+        const el=document.createElement('div');el.className='shop-item';
+        const canBuy=!owned&&coins>=c.price;
+        el.innerHTML=`<span class="si-ic">${c.icon}</span><div class="si-nm">${c.name}</div>${owned?'<div class="si-owned">✓ POSSÉDÉ</div>':c.price===0?'<div class="si-owned">GRATUIT</div>':`<div class="si-price">🪙 ${c.price}</div>`}<button class="${owned||c.price===0?'owned-btn':'buy-btn'}" ${owned||c.price===0||!canBuy?'disabled':''}>${owned||c.price===0?'✓':'ACHETER'}</button>`;
+        if(!owned&&c.price>0&&canBuy){
+            el.querySelector('button').onclick=()=>buyItem('celeb',c.id,c.price,c.name);
+        }
+        cg.appendChild(el);
+    });
+}
+function buyItem(type,id,price,name){
+    if(coins<price){alert('Pas assez de Samir Coins !');return;}
+    coins-=price;
+    if(type==='drib') ownedDribs.push(id);
+    else ownedCelebs.push(id);
+    saveData();updateCoinUI();buildShop();buildSelectors();
+    alert('✅ '+name+' débloqué !');
 }
 
-// Joueurs en ligne
+// ── ÉQUIPE ────────────────────────────────────
+function selTeam(el){playerTeam=el.dataset.t;document.querySelectorAll('[data-t]').forEach(e=>e.className='sc');el.classList.add(playerTeam==='rouge'?'sr':'sb');}
+
+// ── ONLINE ────────────────────────────────────
 const onlinePlayers={};
 function refreshOnline(){
-    const list=document.getElementById('online-list');
-    const empty=document.getElementById('online-empty');
+    const list=document.getElementById('online-list'),empty=document.getElementById('online-empty');
     list.querySelectorAll('.op').forEach(e=>e.remove());
     const cnt=Object.keys(onlinePlayers).length;
     if(cnt===0){empty.style.display='block';return;}
     empty.style.display='none';
     Object.values(onlinePlayers).forEach(p=>{
-        const el=document.createElement('div');
-        el.className='op '+(p.team||'');
+        const el=document.createElement('div');el.className='op '+(p.team||'');
         el.textContent=(p.team==='rouge'?'🔴 ':'🔵 ')+p.pseudo;
         list.appendChild(el);
     });
@@ -153,9 +390,8 @@ function refreshOnline(){
 socket.on('player_joined',p=>{onlinePlayers[p.id]=p;refreshOnline();addSys(p.pseudo+' a rejoint');});
 socket.on('player_left', p=>{delete onlinePlayers[p.id];refreshOnline();addSys(p.pseudo+' est parti');});
 
-// Chat
-const chatIn=document.getElementById('chat-in');
-const chatMsgs=document.getElementById('chat-msgs');
+// ── CHAT ──────────────────────────────────────
+const chatIn=document.getElementById('chat-in'),chatMsgs=document.getElementById('chat-msgs');
 chatIn.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();sendChat();}});
 chatIn.addEventListener('focus',()=>{if(window._kc)window._kc(false);});
 chatIn.addEventListener('blur', ()=>{if(window._kc)window._kc(true);});
@@ -163,22 +399,55 @@ function sendChat(){const m=chatIn.value.trim();if(!m)return;socket.emit('chat_m
 socket.on('chat_msg',({pseudo,msg,team})=>{const l=document.createElement('div');l.className='cl '+(team||'');l.innerHTML='<span class="cn">'+pseudo+'</span><span>'+msg+'</span>';chatMsgs.appendChild(l);chatMsgs.scrollTop=chatMsgs.scrollHeight;});
 function addSys(t){const l=document.createElement('div');l.className='cl sys';l.textContent=t;chatMsgs.appendChild(l);chatMsgs.scrollTop=chatMsgs.scrollHeight;}
 
-// Timer
-socket.on('timer_tick',t=>{const m=Math.floor(t/60),s=String(t%60).padStart(2,'0');const el=document.getElementById('gtimer');el.textContent=m+':'+s;el.style.color=t<=30?'#ff4444':'#fff';});
-socket.on('game_over',()=>document.getElementById('gtimer').textContent='FIN');
+// ── TIMER ─────────────────────────────────────
+socket.on('timer_tick',t=>{
+    const m=Math.floor(t/60),s=String(t%60).padStart(2,'0');
+    const el=document.getElementById('gtimer');el.textContent=m+':'+s;el.style.color=t<=30?'#ff4444':'#fff';
+});
 
+// ── BUT → COINS ───────────────────────────────
+let matchCoinsEarned=0;
+socket.on('goal_scored',({scorerPseudo})=>{
+    const myPseudo=document.getElementById('pseudo').value.trim()||'Joueur';
+    if(scorerPseudo===myPseudo){ addCoins(10); matchCoinsEarned+=10; document.getElementById('gcoin').textContent='🪙 '+coins; }
+});
+
+// ── FIN DE MATCH ──────────────────────────────
+socket.on('game_over',({scores})=>{
+    document.getElementById('gtimer').textContent='FIN';
+    const es=document.getElementById('end-scores'),ew=document.getElementById('end-winner');
+    es.textContent=scores.rouge+' - '+scores.bleu;
+    if(scores.rouge>scores.bleu){ew.textContent='🔴 ROUGE GAGNE !';ew.className='rouge';}
+    else if(scores.bleu>scores.rouge){ew.textContent='🔵 BLEU GAGNE !';ew.className='bleu';}
+    else{ew.textContent='ÉGALITÉ !';ew.className='egalite';}
+    document.getElementById('end-coins').textContent='Tu as gagné +'+matchCoinsEarned+' 🪙 ce match';
+    matchCoinsEarned=0;
+    document.getElementById('end-screen').classList.add('show');
+});
+
+function playAgain(){
+    document.getElementById('end-screen').classList.remove('show');
+    document.getElementById('game-wrap').style.display='none';
+    document.getElementById('lobby-wrap').style.display='flex';
+    document.getElementById('hint').style.display='none';
+    document.getElementById('gtimer').textContent='5:00';
+    buildSelectors();
+    if(window._phaserGame){window._phaserGame.destroy(true);window._phaserGame=null;}
+}
 function toggleFS(){if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.();}
 
 function startGame(){
     const pseudo=document.getElementById('pseudo').value.trim()||'Joueur';
-    document.getElementById('lobby').style.display='none';
+    document.getElementById('lobby-wrap').style.display='none';
     document.getElementById('game-wrap').style.display='flex';
     document.getElementById('hint').style.display='block';
     document.getElementById('gtimer').textContent='5:00';
-    socket.emit('join',{pseudo,team:playerTeam,poste:'attaquant',celeb:'cool',dribble:'virgule',timerMax:300});
-    initGame(pseudo, playerTeam, socket);
+    document.getElementById('gcoin').textContent='🪙 '+coins;
+    socket.emit('join',{pseudo,team:playerTeam,poste:'attaquant',celeb:playerCeleb,dribble:playerDribble,timerMax:300});
+    initGame(pseudo,playerTeam,playerCeleb,playerDribble,socket);
 }
 </script>
 <script src="game.js"></script>
 </body>
 </html>
+
