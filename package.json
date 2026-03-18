@@ -1,0 +1,19 @@
+{
+  "name": "foot-insolite",
+  "version": "1.0.0",
+  "description": "Foot Insolite - Jeu de foot multijoueur",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.6.0"
+  }
+}
