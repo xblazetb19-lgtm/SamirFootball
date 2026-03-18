@@ -12,7 +12,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const G = {
     players:  {},
-    ball:     { x:400, y:240, vx:0, vy:0 },
+    ball:     { x:500, y:290, vx:0, vy:0 },
+    ballOwner: null, // socket.id du joueur qui contrôle la balle
     scores:   { rouge:0, bleu:0 },
     timer:    300,
     timerMax: 300,
@@ -67,9 +68,24 @@ io.on('connection', socket => {
     });
 
     socket.on('ball_update', data => {
-        G.ball = data; // garde pour les nouveaux joueurs
-        // Broadcast immédiat sans traitement
-        socket.broadcast.emit('ball_move', data);
+        // Devient propriétaire si personne ne l'est ou si c'est déjà lui
+        if(!G.ballOwner || G.ballOwner === socket.id) {
+            G.ballOwner = socket.id;
+            G.ball = data;
+            socket.broadcast.emit('ball_move', data);
+        }
+    });
+
+    socket.on('ball_touched', () => {
+        // Un joueur touche la balle — il devient propriétaire
+        G.ballOwner = socket.id;
+    });
+
+    socket.on('ball_free', () => {
+        // La balle est tirée — libère le ownership après 300ms
+        setTimeout(() => {
+            if(G.ballOwner === socket.id) G.ballOwner = null;
+        }, 300);
     });
 
     socket.on('goal', ({ team, scorerPseudo }) => {
@@ -77,12 +93,27 @@ io.on('connection', socket => {
         G.goalLock = true;
         if (team === 'rouge') G.scores.rouge++;
         else G.scores.bleu++;
-        G.ball = { x:400, y:240, vx:0, vy:0 };
+        G.ball = { x:500, y:290, vx:0, vy:0 };
+        G.ballOwner = null;
         io.emit('goal_scored', { team, scores: G.scores, scorerPseudo });
         setTimeout(() => { io.emit('ball_reset', G.ball); G.goalLock = false; }, 2800);
     });
 
+    // Emote
+    socket.on('emote',({emote,x,y})=>{
+        socket.broadcast.emit('player_emote',{id:socket.id,emote,x,y});
+    });
+
+    // Emote
+    socket.on('emote',({emote})=>{
+        socket.broadcast.emit('player_emote',{id:socket.id, emote});
+    });
+
     // Push joueur
+    socket.on('emote', ({emote, pseudo}) => {
+        socket.broadcast.emit('emote', {id:socket.id, emote, pseudo});
+    });
+
     socket.on('push', ({ targetId, dx, dy }) => {
         // Broadcast au joueur ciblé
         io.to(targetId).emit('got_pushed', { dx, dy, force:380 });
@@ -100,9 +131,11 @@ io.on('connection', socket => {
         console.log('- parti:', p.pseudo);
         io.emit('player_left', { id: socket.id, pseudo: p.pseudo });
         delete G.players[socket.id];
+        if(G.ballOwner === socket.id) G.ballOwner = null;
         if (Object.keys(G.players).length === 0) {
             G.scores = { rouge:0, bleu:0 };
-            G.ball   = { x:400, y:240, vx:0, vy:0 };
+            G.ball   = { x:500, y:290, vx:0, vy:0 };
+            G.ballOwner = null;
             G.started = false;
             G.timer   = G.timerMax;
         }
