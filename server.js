@@ -67,7 +67,8 @@ io.on('connection', socket => {
     });
 
     socket.on('ball_update', data => {
-        G.ball = data;
+        G.ball = data; // garde pour les nouveaux joueurs
+        // Broadcast immédiat sans traitement
         socket.broadcast.emit('ball_move', data);
     });
 
