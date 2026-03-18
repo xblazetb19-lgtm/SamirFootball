@@ -408,6 +408,17 @@ function _update(time,delta){
         }
     }
 
+    // Décide qui est autoritaire sur la balle
+    if(_b && _p){
+        const myDist=Math.sqrt((_b.x-_p.x)**2+(_b.y-_p.y)**2);
+        let closestDist=myDist;
+        Object.values(_remotes).forEach(r=>{
+            const d=Math.sqrt((_b.x-r.x)**2+(_b.y-r.y)**2);
+            if(d<closestDist) closestDist=d;
+        });
+        _ballAuthority = (myDist===closestDist || Object.keys(_remotes).length===0);
+    }
+
     _updUI();
     if(!_gCD)_checkGoals(this);
 }
