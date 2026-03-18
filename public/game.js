@@ -116,7 +116,7 @@ function _create(pseudo,team,celeb,drib,socket){
     // Ballon — rebondit librement
     _b=this.physics.add.image(SPAWN_BALL.x,SPAWN_BALL.y,'ballon');
     _b.setDisplaySize(BS,BS).setCollideWorldBounds(true); // balle ne sort jamais
-    _b.setBounce(0.75).setDrag(55).setDepth(5).setMaxVelocity(1400,1400);
+    _b.setBounce(0.75).setDrag(40).setDepth(5).setMaxVelocity(1400,1400);
 
     this.physics.add.collider(_p,_walls);
     this.physics.add.collider(_b,_walls);
@@ -193,11 +193,19 @@ function _setupSock(scene,socket){
     socket.on('player_joined',p=>{ if(p.id!==socket.id) _addR(scene,p); });
     socket.on('player_move',data=>{ if(_remotes[data.id]){_remotes[data.id].tx=data.x;_remotes[data.id].ty=data.y;} });
     socket.on('ball_move',data=>{
-        if(!_b)return;
-        const dx=data.x-_b.x, dy=data.y-_b.y, dist=Math.sqrt(dx*dx+dy*dy);
-        if(dist>200) _b.setPosition(data.x,data.y);
-        else if(dist>5) _b.setPosition(_b.x+dx*0.4,_b.y+dy*0.4);
-        _b.setVelocity(data.vx||0,data.vy||0);
+        if(!_b) return;
+        const dx=data.x-_b.x, dy=data.y-_b.y;
+        const dist=Math.sqrt(dx*dx+dy*dy);
+        // Téléporte si gros écart (tir, rebond fort)
+        if(dist>120){
+            _b.setPosition(data.x,data.y);
+            _b.setVelocity(data.vx||0,data.vy||0);
+        } else if(dist>20){
+            // Correction légère de position + on adopte la vélocité serveur
+            _b.setPosition(_b.x+dx*0.25, _b.y+dy*0.25);
+            _b.setVelocity(data.vx||0,data.vy||0);
+        }
+        // Si dist < 20px : on laisse la physique locale tourner sans rien faire
     });
     socket.on('goal_scored',({team,scores,scorerPseudo})=>{
         _sR=scores.rouge;_sB=scores.bleu;
@@ -334,7 +342,8 @@ function _update(time,delta){
     if(_netT>=16){
         _netT=0;
         _sock?.emit('player_update',{x:Math.round(_p.x),y:Math.round(_p.y),angle:_ang,hasBall:false});
-        if(_b.body.speed>3||inR) _sock?.emit('ball_update',{x:Math.round(_b.x),y:Math.round(_b.y),vx:Math.round(_b.body.velocity.x),vy:Math.round(_b.body.velocity.y)});
+        // Envoie toujours la position balle pour que l'autre ait les données fraîches
+        _sock?.emit('ball_update',{x:Math.round(_b.x),y:Math.round(_b.y),vx:Math.round(_b.body.velocity.x),vy:Math.round(_b.body.velocity.y)});
     }
 
     _updUI();
