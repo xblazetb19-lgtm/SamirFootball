@@ -35,14 +35,20 @@ var _sTxt, _pTxt, _rTxt;
 var _gSta, _gDrib, _gPow, _gEff, _gLob, _gPush;
 var _sock, _team, _pseudo, _myceleb, _mydrib;
 var _remotes={}, _netT=0, _pend=null;
-var _cur, _spc, _eKey, _fKey, _sft;
+var _cur, _spc, _eKey, _fKey, _sft, _yKey;
+var _emoteList=['🐒','👧','⛷️','👷','🍿','🍟','🥨','🧨','🎐','🎢','🎪','🛻','🚙','🛴','💫','㊗️','🧜','🎉','🔥','💎'];
+var _emoteIndex=0, _emoteCD=false;
 
 // Jauges
 var _chargePow=0,  _isChargingPow=false;   // ESPACE : tir puissant
 var _chargeEff=0,  _isChargingEff=false;   // CLIC   : tir courbe
 var _chargeLob=0,  _isChargingLob=false;   // E      : lob
 var _shootCD=false, _shootCDt=0;
+var _ballMaster=false; // ce client contrôle la balle
+var _ballMasterTimer=0;
 var _pushCD=false, _pushCDt=0, PUSH_CD=10000;
+var _emoteCD=false, _emoteCDt=0, EMOTE_CD=3000;
+var _yKey;
 var _curve=0, _efxVal=0;
 
 const DRIB={
@@ -90,6 +96,7 @@ function _create(pseudo,team,celeb,drib,socket){
     _isChargingPow=false;_isChargingEff=false;_isChargingLob=false;
     _shootCD=false;_curve=0;_efxVal=0;
     _remotes={};_pend=null;_stamina=100;_ang=0;
+    _ballMaster=(team==='rouge'); // rouge maître par défaut
 
     _drawField(this);
     this.physics.world.setBounds(0,0,GW,GH);
@@ -128,7 +135,10 @@ function _create(pseudo,team,celeb,drib,socket){
     _spc=this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     _eKey=this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
     _fKey=this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
+    _yKey=this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Y);
     _sft=this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+    _yKey=this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Y);
+    _yKey.on('down',()=>{ _doEmote(this); });
 
     // ESPACE maintenu = charge tir puissant, relâché = tire
     _spc.on('down', ()=>{ if(_inR()&&!_dOn&&!_shootCD) _isChargingPow=true; });
@@ -152,11 +162,26 @@ function _create(pseudo,team,celeb,drib,socket){
 
     window._kc=on=>{ this.input.keyboard.enabled=on; };
 
+    // TOUCHE Y = emote aléatoire
+    const yKey=this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Y);
+    yKey.on('down',()=>{ _doEmote(this); });
+
     // CLIC DROIT = push
     this.input.on('pointerdown', ptr=>{
         if(ptr.rightButtonDown()) _doPush(this);
     });
     document.addEventListener('contextmenu', e=>e.preventDefault());
+
+    // Touche Y = emote
+    _yKey.on('down',()=>{
+        if(_emoteCD) return;
+        _emoteCD=true;
+        const emote=_emoteList[_emoteIndex%_emoteList.length];
+        _emoteIndex++;
+        _showEmote(this, emote);
+        _sock?.emit('emote',{emote, pseudo:_pseudo});
+        setTimeout(()=>_emoteCD=false, 1500);
+    });
 
     // Score UI
     this.add.text(GW/2-90,14,'ROUGE',{fontFamily:'Bebas Neue',fontSize:'14px',color:'#e83030',stroke:'#000',strokeThickness:3}).setOrigin(0.5,0).setDepth(20);
@@ -177,6 +202,7 @@ function _inR(){
 
 // Collision physique : petite impulsion pour ne pas coller
 function _onContact(p,b){
+    _becomeMaster();
     const a=Math.atan2(b.y-p.y, b.x-p.x);
     const spd=Math.sqrt(p.body.velocity.x**2+p.body.velocity.y**2);
     // Micro impulsion — balle reste très proche
@@ -194,18 +220,24 @@ function _setupSock(scene,socket){
     socket.on('player_move',data=>{ if(_remotes[data.id]){_remotes[data.id].tx=data.x;_remotes[data.id].ty=data.y;} });
     socket.on('ball_move',data=>{
         if(!_b) return;
+        // Vérifie si on est l'autorité (plus proche de la balle)
+        const myDist=Math.sqrt((_b.x-_p.x)**2+(_b.y-_p.y)**2);
+        let iAm=true;
+        Object.values(_remotes).forEach(r=>{
+            if(Math.sqrt((_b.x-r.x)**2+(_b.y-r.y)**2)<myDist) iAm=false;
+        });
+        // Si je suis l'autorité, j'ignore les corrections de l'autre
+        if(iAm) return;
+        // Sinon j'applique la position du serveur
         const dx=data.x-_b.x, dy=data.y-_b.y;
         const dist=Math.sqrt(dx*dx+dy*dy);
-        // Téléporte si gros écart (tir, rebond fort)
-        if(dist>120){
+        if(dist>80){
             _b.setPosition(data.x,data.y);
             _b.setVelocity(data.vx||0,data.vy||0);
-        } else if(dist>20){
-            // Correction légère de position + on adopte la vélocité serveur
-            _b.setPosition(_b.x+dx*0.25, _b.y+dy*0.25);
+        } else if(dist>8){
+            _b.setPosition(_b.x+dx*0.5,_b.y+dy*0.5);
             _b.setVelocity(data.vx||0,data.vy||0);
         }
-        // Si dist < 20px : on laisse la physique locale tourner sans rien faire
     });
     socket.on('goal_scored',({team,scores,scorerPseudo})=>{
         _sR=scores.rouge;_sB=scores.bleu;
@@ -214,7 +246,23 @@ function _setupSock(scene,socket){
     });
     socket.on('ball_reset',data=>{ if(_b)_b.setPosition(data.x,data.y).setVelocity(0,0); });
     socket.on('player_left',({id})=>{ if(_remotes[id]){try{_remotes[id].s.destroy();}catch(e){}try{_remotes[id].l.destroy();}catch(e){} delete _remotes[id];} });
+    socket.on('emote',({id,emote,pseudo})=>{
+        // Affiche l'emote au dessus du joueur distant
+        const r=_remotes[id];
+        if(!r||!window._phaserGame) return;
+        const scene=window._phaserGame.scene.scenes[0];
+        _showEmoteAt(scene, r.x, r.y, emote);
+    });
+
     socket.on('send_pos',()=>{ if(_p)socket.emit('player_update',{x:Math.round(_p.x),y:Math.round(_p.y),angle:_ang,hasBall:false}); });
+
+    socket.on('player_emote',({id,emote})=>{
+        if(_remotes[id]) _showEmote(scene, _remotes[id].x, _remotes[id].y, emote);
+    });
+
+    socket.on('player_emote',({id,emote,x,y})=>{
+        if(window._phaserGame) _showEmote(window._phaserGame.scene.scenes[0],x,y,emote);
+    });
 
     // Reçoit un push
     socket.on('got_pushed',({dx,dy,force})=>{
@@ -260,7 +308,13 @@ function _update(time,delta){
 
     if(_pend&&_b&&_sTxt){_applyS(this,_sock,_pend);_pend=null;}
     if(_shootCD){_shootCDt-=delta;if(_shootCDt<=0)_shootCD=false;}
-    if(_pushCD){_pushCDt-=delta;if(_pushCDt<=0){_pushCD=false;}}
+    // Timer maître balle
+    if(_ballMaster&&_ballMasterTimer>0){
+        _ballMasterTimer-=delta;
+        if(_ballMasterTimer<=0&&!_inR()) _ballMaster=false;
+    }
+    if(_pushCD){_pushCDt-=delta;if(_pushCDt<=0)_pushCD=false;}
+    if(_emoteCD){_emoteCDt-=delta;if(_emoteCDt<=0)_emoteCD=false;}
     if(_dCD){_dCDt-=delta;if(_dCDt<=0)_dCD=false;}
 
     // Mouvement
@@ -342,8 +396,16 @@ function _update(time,delta){
     if(_netT>=16){
         _netT=0;
         _sock?.emit('player_update',{x:Math.round(_p.x),y:Math.round(_p.y),angle:_ang,hasBall:false});
-        // Envoie toujours la position balle pour que l'autre ait les données fraîches
-        _sock?.emit('ball_update',{x:Math.round(_b.x),y:Math.round(_b.y),vx:Math.round(_b.body.velocity.x),vy:Math.round(_b.body.velocity.y)});
+        // Envoie la balle seulement si on est le plus proche (autorité)
+        const distToBall=Math.sqrt((_b.x-_p.x)**2+(_b.y-_p.y)**2);
+        let isBallAuthority=true;
+        Object.values(_remotes).forEach(r=>{
+            const rd=Math.sqrt((_b.x-r.x)**2+(_b.y-r.y)**2);
+            if(rd<distToBall) isBallAuthority=false;
+        });
+        if(isBallAuthority){
+            _sock?.emit('ball_update',{x:Math.round(_b.x),y:Math.round(_b.y),vx:Math.round(_b.body.velocity.x),vy:Math.round(_b.body.velocity.y)});
+        }
     }
 
     _updUI();
@@ -351,7 +413,10 @@ function _update(time,delta){
 }
 
 // ── TIRS VERS CURSEUR ───────────────────────────
+function _becomeMaster(){ _ballMaster=true; _ballMasterTimer=3000; }
+
 function _doShoot(scene){
+    _becomeMaster();
     const ptr=window._phaserGame.scene.scenes[0].input.activePointer;
     const a=Phaser.Math.Angle.Between(_p.x,_p.y,ptr.x,ptr.y);
     const pow=180+_chargePow*(750-180);
@@ -360,9 +425,11 @@ function _doShoot(scene){
     _p.setVelocity(-Math.cos(a)*45,-Math.sin(a)*45);
     _shootCD=true;_shootCDt=400;
     _isChargingPow=false;_chargePow=0;
+    _sock?.emit('ball_free');
 }
 
 function _doShootCurve(ptr){
+    _becomeMaster();
     const a=Phaser.Math.Angle.Between(_p.x,_p.y,ptr.x,ptr.y);
     const diff=Phaser.Math.Angle.Wrap(a-_ang);
     _curve=diff>0.1?1:diff<-0.1?-1:(Math.random()<0.5?1:-1);
@@ -372,9 +439,11 @@ function _doShootCurve(ptr){
     _p.setVelocity(-Math.cos(a)*45,-Math.sin(a)*45);
     _shootCD=true;_shootCDt=400;
     _isChargingEff=false;_chargeEff=0;
+    _sock?.emit('ball_free');
 }
 
 function _doLob(scene){
+    _becomeMaster();
     const ptr=window._phaserGame.scene.scenes[0].input.activePointer;
     const a=Phaser.Math.Angle.Between(_p.x,_p.y,ptr.x,ptr.y);
     const hspd=140+_chargeLob*(280-140);
@@ -429,6 +498,7 @@ function _animDrib(){
     _b.setPosition(tx,ty);_b.setVelocity(0,0);
 }
 function _endDrib(){
+    _becomeMaster();
     _dOn=false;_dCD=true;_dCDt=2800;
     _b.setAlpha(1).setScale(BS/_b.width);
     _b.setVelocity(Math.cos(_ang)*300,Math.sin(_ang)*300);
