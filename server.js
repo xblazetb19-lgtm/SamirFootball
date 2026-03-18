@@ -81,6 +81,14 @@ io.on('connection', socket => {
         setTimeout(() => { io.emit('ball_reset', G.ball); G.goalLock = false; }, 2800);
     });
 
+    // Push joueur
+    socket.on('push', ({ targetId, dx, dy }) => {
+        // Broadcast au joueur ciblé
+        io.to(targetId).emit('got_pushed', { dx, dy, force:380 });
+        // Broadcast visuel à tous
+        socket.broadcast.emit('push_effect', { fromId:socket.id, targetId });
+    });
+
     socket.on('chat_msg', ({ pseudo, msg, team }) => {
         io.emit('chat_msg', { pseudo, msg, team });
     });
