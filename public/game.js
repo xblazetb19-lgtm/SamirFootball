@@ -47,7 +47,7 @@ var _shootCD=false, _shootCDt=0;
 // Gardiens (barres style pong)
 var _goalie_r = null, _goalie_b = null; // sprites
 var _goalie_r_y = 290, _goalie_b_y = 290; // positions Y
-const GOALIE_W = 12, GOALIE_H = 56, GOALIE_SPEED = 18;
+const GOALIE_W = 12, GOALIE_H = 28, GOALIE_SPEED = 18;
 var _myGoalieRemote = null; // barre adverse (sprite)
 var _ballMaster=false; // ce client contrôle la balle
 var _ballMasterTimer=0;
