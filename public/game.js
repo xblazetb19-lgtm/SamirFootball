@@ -44,6 +44,11 @@ var _chargePow=0,  _isChargingPow=false;   // ESPACE : tir puissant
 var _chargeEff=0,  _isChargingEff=false;   // CLIC   : tir courbe
 var _chargeLob=0,  _isChargingLob=false;   // E      : lob
 var _shootCD=false, _shootCDt=0;
+// Gardiens (barres style pong)
+var _goalie_r = null, _goalie_b = null; // sprites
+var _goalie_r_y = 290, _goalie_b_y = 290; // positions Y
+const GOALIE_W = 12, GOALIE_H = 56, GOALIE_SPEED = 18;
+var _myGoalieRemote = null; // barre adverse (sprite)
 var _ballMaster=false; // ce client contrôle la balle
 var _ballMasterTimer=0;
 var _pushCD=false, _pushCDt=0, PUSH_CD=10000;
@@ -190,6 +195,43 @@ function _create(pseudo,team,celeb,drib,socket){
     _pTxt=this.add.text(0,0,pseudo,{fontFamily:'Bebas Neue',fontSize:'11px',color:'#fff',stroke:'#000',strokeThickness:3}).setOrigin(0.5,1).setDepth(9);
     _rTxt=this.add.text(GW/2,GH-8,'',{fontFamily:'Bebas Neue',fontSize:'12px',color:'#2ecc4a',stroke:'#000',strokeThickness:3}).setOrigin(0.5,1).setDepth(22);
     _buildUI(this);
+
+    // ── GARDIENS (barres pong) ──
+    // Barre rouge : x=38 (devant but gauche)
+    // Barre bleue : x=950 (devant but droit)
+    _goalie_r = this.add.rectangle(50, _goalie_r_y, GOALIE_W, GOALIE_H, 0xff4444).setDepth(6);
+    _goalie_b = this.add.rectangle(950, _goalie_b_y, GOALIE_W, GOALIE_H, 0x4488ff).setDepth(6);
+
+    // Physique sur les barres pour que la balle rebondisse
+    this.physics.add.existing(_goalie_r, true); // static
+    this.physics.add.existing(_goalie_b, true);
+
+    this.physics.add.collider(_b, _goalie_r, ()=>{
+        // Rebond avec angle selon où la balle touche
+        const diff = _b.y - _goalie_r_y;
+        const angle = (diff / (GOALIE_H/2)) * (Math.PI/3);
+        const spd = Math.max(Math.sqrt(_b.body.velocity.x**2+_b.body.velocity.y**2), 300);
+        _b.setVelocity(Math.cos(angle)*spd, Math.sin(angle)*spd);
+    }, null, this);
+
+    this.physics.add.collider(_b, _goalie_b, ()=>{
+        const diff = _b.y - _goalie_b_y;
+        const angle = Math.PI - (diff / (GOALIE_H/2)) * (Math.PI/3);
+        const spd = Math.max(Math.sqrt(_b.body.velocity.x**2+_b.body.velocity.y**2), 300);
+        _b.setVelocity(Math.cos(angle)*spd, Math.sin(angle)*spd);
+    }, null, this);
+
+    // Molette = déplacer son gardien
+    this.input.on('wheel', (ptr, gameObjects, deltaX, deltaY) => {
+        if(_team === 'rouge') {
+            _goalie_r_y = Phaser.Math.Clamp(_goalie_r_y + deltaY * 0.4, BUT_R.y + GOALIE_H/2, BUT_R.y + BUT_R.h - GOALIE_H/2);
+            _sock?.emit('goalie_move', { team:'rouge', y: Math.round(_goalie_r_y) });
+        } else {
+            _goalie_b_y = Phaser.Math.Clamp(_goalie_b_y + deltaY * 0.4, BUT_B.y + GOALIE_H/2, BUT_B.y + BUT_B.h - GOALIE_H/2);
+            _sock?.emit('goalie_move', { team:'bleu', y: Math.round(_goalie_b_y) });
+        }
+    });
+
     _setupSock(this,socket);
 }
 
@@ -256,6 +298,12 @@ function _setupSock(scene,socket){
 
     socket.on('send_pos',()=>{ if(_p)socket.emit('player_update',{x:Math.round(_p.x),y:Math.round(_p.y),angle:_ang,hasBall:false}); });
 
+    // Mouvement du gardien adverse
+    socket.on('goalie_move', ({team, y}) => {
+        if(team === 'rouge') _goalie_r_y = y;
+        else _goalie_b_y = y;
+    });
+
     socket.on('player_emote',({id,emote})=>{
         if(_remotes[id]) _showEmote(scene, _remotes[id].x, _remotes[id].y, emote);
     });
@@ -281,7 +329,8 @@ function _setupSock(scene,socket){
     });
 }
 
-function _applyS(scene,socket,{players,ball:bd,scores}){
+function _applyS(scene,socket,{players,ball:bd,scores,goalies}){
+    if(goalies){ _goalie_r_y=goalies.rouge||290; _goalie_b_y=goalies.bleu||290; }
     if(!_b||!_sTxt)return;
     _sR=scores.rouge;_sB=scores.bleu;_sTxt.setText(_sR+'  -  '+_sB);
     if(bd)_b.setPosition(bd.x,bd.y).setVelocity(bd.vx||0,bd.vy||0);
@@ -390,6 +439,16 @@ function _update(time,delta){
     if(_p.y < -80) _p.setVelocityY(Math.max(0,_p.body.velocity.y));
     if(_p.y > GH+80) _p.setVelocityY(Math.min(0,_p.body.velocity.y));
     if(_pTxt)_pTxt.setPosition(_p.x,_p.y-PS/2-4);
+
+    // Mise à jour visuelle + physique des gardiens
+    if(_goalie_r){
+        _goalie_r.setY(_goalie_r_y);
+        _goalie_r.body.reset(50, _goalie_r_y);
+    }
+    if(_goalie_b){
+        _goalie_b.setY(_goalie_b_y);
+        _goalie_b.body.reset(950, _goalie_b_y);
+    }
 
     // Réseau
     _netT+=delta;
@@ -524,6 +583,7 @@ function _resetPos(){
     const sp=_team==='rouge'?SPAWN_R:SPAWN_B;
     _p.setPosition(sp.x,sp.y).setVelocity(0,0).setDisplaySize(PS,PS);
     _lobOn=false;_lobZ=0;_dOn=false;_shootCD=false;_celeb=false;
+    _goalie_r_y=290; _goalie_b_y=290;
     _isChargingPow=false;_isChargingEff=false;_isChargingLob=false;
     _chargePow=0;_chargeEff=0;_chargeLob=0;_curve=0;_efxVal=0;
     if(_rTxt)_rTxt.setText('');
