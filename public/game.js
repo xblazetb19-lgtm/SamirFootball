@@ -663,7 +663,7 @@ function _bar(g,y,pct,col,flash=false){
 }
 function _updUI(){
     if(!_gPow)return;
-    _bar(_gPow, GH-34, _chargePow, _chargePow<0.4?0x44dd44:_chargePow<0.75?0xffcc00:0xff3333, true);
+    _bar(_gPow, GH-34, _chargePow, _chargePow<0.08?0x44dd44:_chargePow<0.75?0xffcc00:0xff3333, true);
     _bar(_gEff, GH-60, _chargeEff, _chargeEff<0.5?0x44aaff:_chargeEff<0.85?0x2266ff:0xaa44ff, true);
     _bar(_gLob, GH-86, _chargeLob, 0xffffaa, false);
     _bar(_gDrib,GH-112,_dCD?1-(_dCDt/2800):1, _dCD?0xff8800:0xf0c040);
