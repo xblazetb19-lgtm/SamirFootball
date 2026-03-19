@@ -6,14 +6,13 @@ const path    = require('path');
 const app    = express();
 const server = http.createServer(app);
 const io     = new Server(server, { cors: { origin: '*' } });
-const PORT = process.env.PORT || 3000;
+const PORT   = process.env.PORT || 3000;
 
 app.use(express.static(path.join(__dirname, 'public')));
 
 const G = {
     players:  {},
     ball:     { x:500, y:290, vx:0, vy:0 },
-    ballOwner: null, // socket.id du joueur qui contrôle la balle
     scores:   { rouge:0, bleu:0 },
     timer:    300,
     timerMax: 300,
@@ -27,8 +26,8 @@ io.on('connection', socket => {
     socket.on('join', ({ pseudo, team, poste, celeb, dribble, timerMax }) => {
         G.players[socket.id] = {
             id: socket.id, pseudo, team, poste, celeb, dribble,
-            x: team === 'rouge' ? 112 : 688,
-            y: 240, angle: 0, hasBall: false
+            x: team === 'rouge' ? 140 : 860,
+            y: 290, angle: 0, hasBall: false
         };
         if (Object.keys(G.players).length === 1 && timerMax) {
             G.timerMax = G.timer = timerMax;
@@ -37,7 +36,6 @@ io.on('connection', socket => {
             G.started = true;
         }
 
-        // Annonce aux autres
         socket.broadcast.emit('player_joined', G.players[socket.id]);
 
         const snap = () => ({
@@ -47,45 +45,32 @@ io.on('connection', socket => {
             timer: G.timer
         });
 
-        // Envoie full_state immédiatement à tout le monde
         io.emit('full_state', snap());
-        // Et encore plusieurs fois pour les connexions lentes
         [300, 800, 1500].forEach(d => {
             setTimeout(() => io.emit('full_state', snap()), d);
         });
 
-        // Demande aux autres leur position actuelle
         socket.broadcast.emit('send_pos');
-
         console.log(`${pseudo} (${team}) — ${Object.keys(G.players).length} joueur(s)`);
     });
 
     socket.on('player_update', data => {
         const p = G.players[socket.id];
         if (!p) return;
-        p.x = data.x; p.y = data.y; p.angle = data.angle; p.hasBall = data.hasBall;
-        socket.broadcast.emit('player_move', { id: socket.id, x:data.x, y:data.y, angle:data.angle, hasBall:data.hasBall });
+        p.x = data.x; p.y = data.y;
+        p.angle = data.angle; p.hasBall = data.hasBall;
+        socket.broadcast.emit('player_move', {
+            id: socket.id, x:data.x, y:data.y,
+            angle:data.angle, hasBall:data.hasBall
+        });
     });
 
+    // Balle : le client qui envoie est toujours relayé immédiatement
+    // Pas de système ballOwner — tout le monde peut envoyer
     socket.on('ball_update', data => {
-        // Devient propriétaire si personne ne l'est ou si c'est déjà lui
-        if(!G.ballOwner || G.ballOwner === socket.id) {
-            G.ballOwner = socket.id;
-            G.ball = data;
-            socket.broadcast.emit('ball_move', data);
-        }
-    });
-
-    socket.on('ball_touched', () => {
-        // Un joueur touche la balle — il devient propriétaire
-        G.ballOwner = socket.id;
-    });
-
-    socket.on('ball_free', () => {
-        // La balle est tirée — libère le ownership après 300ms
-        setTimeout(() => {
-            if(G.ballOwner === socket.id) G.ballOwner = null;
-        }, 300);
+        G.ball = data;
+        // Relay à TOUT le monde sauf l'envoyeur
+        socket.broadcast.emit('ball_move', data);
     });
 
     socket.on('goal', ({ team, scorerPseudo }) => {
@@ -94,30 +79,15 @@ io.on('connection', socket => {
         if (team === 'rouge') G.scores.rouge++;
         else G.scores.bleu++;
         G.ball = { x:500, y:290, vx:0, vy:0 };
-        G.ballOwner = null;
         io.emit('goal_scored', { team, scores: G.scores, scorerPseudo });
-        setTimeout(() => { io.emit('ball_reset', G.ball); G.goalLock = false; }, 2800);
-    });
-
-    // Emote
-    socket.on('emote',({emote,x,y})=>{
-        socket.broadcast.emit('player_emote',{id:socket.id,emote,x,y});
-    });
-
-    // Emote
-    socket.on('emote',({emote})=>{
-        socket.broadcast.emit('player_emote',{id:socket.id, emote});
-    });
-
-    // Push joueur
-    socket.on('emote', ({emote, pseudo}) => {
-        socket.broadcast.emit('emote', {id:socket.id, emote, pseudo});
+        setTimeout(() => {
+            io.emit('ball_reset', G.ball);
+            G.goalLock = false;
+        }, 2800);
     });
 
     socket.on('push', ({ targetId, dx, dy }) => {
-        // Broadcast au joueur ciblé
         io.to(targetId).emit('got_pushed', { dx, dy, force:380 });
-        // Broadcast visuel à tous
         socket.broadcast.emit('push_effect', { fromId:socket.id, targetId });
     });
 
@@ -131,11 +101,9 @@ io.on('connection', socket => {
         console.log('- parti:', p.pseudo);
         io.emit('player_left', { id: socket.id, pseudo: p.pseudo });
         delete G.players[socket.id];
-        if(G.ballOwner === socket.id) G.ballOwner = null;
         if (Object.keys(G.players).length === 0) {
-            G.scores = { rouge:0, bleu:0 };
-            G.ball   = { x:500, y:290, vx:0, vy:0 };
-            G.ballOwner = null;
+            G.scores  = { rouge:0, bleu:0 };
+            G.ball    = { x:500, y:290, vx:0, vy:0 };
             G.started = false;
             G.timer   = G.timerMax;
         }
@@ -147,7 +115,10 @@ setInterval(() => {
     if (G.timer > 0) {
         G.timer--;
         io.emit('timer_tick', G.timer);
-        if (G.timer <= 0) { G.started = false; io.emit('game_over', { scores: G.scores }); }
+        if (G.timer <= 0) {
+            G.started = false;
+            io.emit('game_over', { scores: G.scores });
+        }
     }
 }, 1000);
 
