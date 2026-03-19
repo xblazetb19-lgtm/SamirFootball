@@ -13,6 +13,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 const G = {
     players:  {},
     ball:     { x:500, y:290, vx:0, vy:0 },
+    goalies:  { rouge: 290, bleu: 290 },
     scores:   { rouge:0, bleu:0 },
     timer:    300,
     timerMax: 300,
@@ -42,7 +43,8 @@ io.on('connection', socket => {
             players: G.players,
             ball: G.ball,
             scores: G.scores,
-            timer: G.timer
+            timer: G.timer,
+            goalies: G.goalies
         });
 
         io.emit('full_state', snap());
@@ -79,11 +81,17 @@ io.on('connection', socket => {
         if (team === 'rouge') G.scores.rouge++;
         else G.scores.bleu++;
         G.ball = { x:500, y:290, vx:0, vy:0 };
+        G.goalies = { rouge:290, bleu:290 };
         io.emit('goal_scored', { team, scores: G.scores, scorerPseudo });
         setTimeout(() => {
             io.emit('ball_reset', G.ball);
             G.goalLock = false;
         }, 2800);
+    });
+
+    socket.on('goalie_move', ({ team, y }) => {
+        G.goalies[team] = y;
+        socket.broadcast.emit('goalie_move', { team, y });
     });
 
     socket.on('push', ({ targetId, dx, dy }) => {
