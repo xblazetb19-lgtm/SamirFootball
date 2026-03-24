@@ -128,12 +128,10 @@ function _create(pseudo,team,celeb,drib,socket){
     // Ballon — rebondit librement
     _b=this.physics.add.image(SPAWN_BALL.x,SPAWN_BALL.y,'ballon');
     _b.setDisplaySize(BS,BS).setCollideWorldBounds(true); // balle ne sort jamais
-    _b.setBounce(0.75).setDrag(40).setDepth(5).setMaxVelocity(1400,1400);
+    _b.setBounce(0.75).setDepth(5).setMaxVelocity(1400,1400);
 
     this.physics.add.collider(_p,_walls);
-    this.physics.add.collider(_b,_walls);
-    // Contact joueur/balle : petite impulsion naturelle
-    this.physics.add.collider(_p,_b,_onContact,null,this);
+    // Pas de physique balle — gérée par le serveur
 
     // Clavier
     _cur=this.input.keyboard.addKeys({up:'Z',down:'S',left:'Q',right:'D'});
@@ -210,14 +208,14 @@ function _create(pseudo,team,celeb,drib,socket){
         // Rebond avec angle selon où la balle touche
         const diff = _b.y - _goalie_r_y;
         const angle = (diff / (GOALIE_H/2)) * (Math.PI/3);
-        const spd = Math.max(Math.sqrt(_b.body.velocity.x**2+_b.body.velocity.y**2), 300);
+        const spd = Math.max(Math.sqrt(0**2+0**2), 300);
         _b.setVelocity(Math.cos(angle)*spd, Math.sin(angle)*spd);
     }, null, this);
 
     this.physics.add.collider(_b, _goalie_b, ()=>{
         const diff = _b.y - _goalie_b_y;
         const angle = Math.PI - (diff / (GOALIE_H/2)) * (Math.PI/3);
-        const spd = Math.max(Math.sqrt(_b.body.velocity.x**2+_b.body.velocity.y**2), 300);
+        const spd = Math.max(Math.sqrt(0**2+0**2), 300);
         _b.setVelocity(Math.cos(angle)*spd, Math.sin(angle)*spd);
     }, null, this);
 
@@ -284,26 +282,20 @@ function _setupSock(scene,socket){
     socket.on('goal_scored',({team,scores,scorerPseudo})=>{
         _sR=scores.rouge; _sB=scores.bleu;
         if(_sTxt) _sTxt.setText(_sR+'  -  '+_sB);
-        _goalEvt(scene, team, scorerPseudo);
+        _gCD=true;
+        if(_p) _p.setVelocity(0,0);
+        _lobOn=false;_dOn=false;
+        _doCeleb(scene,team,scorerPseudo||_pseudo);
     });
 
-    // Le serveur dit quand remettre la balle au centre
     socket.on('ball_reset', data => {
-        if(!_b) return;
-        _b.setPosition(data.x, data.y).setVelocity(0,0);
-        // Reset complet
-        _lobOn=false; _lobZ=0; _dOn=false;
-        _isChargingPow=false; _isChargingEff=false; _isChargingLob=false;
-        _chargePow=0; _chargeEff=0; _chargeLob=0; _curve=0;
-        _shootCD=false;
-        if(_p){
-            const sp=_team==='rouge'?SPAWN_R:SPAWN_B;
-            _p.setPosition(sp.x, sp.y).setVelocity(0,0);
-        }
-        _goalie_r_y=290; _goalie_b_y=290;
-        _gCD=false;
-        _celeb=false;
-        if(_rTxt) _rTxt.setText('');
+        if(_b) _b.setPosition(data.x||500, data.y||290);
+        if(_p){ const sp=_team==='rouge'?SPAWN_R:SPAWN_B; _p.setPosition(sp.x,sp.y).setVelocity(0,0); }
+        _lobOn=false;_lobZ=0;_dOn=false;_shootCD=false;_celeb=false;_gCD=false;
+        _isChargingPow=false;_isChargingEff=false;_isChargingLob=false;
+        _chargePow=0;_chargeEff=0;_chargeLob=0;_curve=0;
+        _goalie_r_y=290;_goalie_b_y=290;
+        if(_rTxt)_rTxt.setText('');
     });
     socket.on('player_left',({id})=>{ if(_remotes[id]){try{_remotes[id].s.destroy();}catch(e){}try{_remotes[id].l.destroy();}catch(e){} delete _remotes[id];} });
     socket.on('emote',({id,emote,pseudo})=>{
@@ -428,20 +420,21 @@ function _update(time,delta){
     }
 
     // Lob
+    // Lob : animation visuelle de la balle (grossit puis reprend taille)
     if(_lobOn){
         _lobVZ-=500*dt;_lobZ+=_lobVZ*dt;
-        if(_lobZ<=0){_lobZ=0;_lobVZ=0;_lobOn=false;_b.setScale(BS/_b.width).setDepth(5).setDrag(55);_shootCD=false;}
-        else{_b.setScale((BS/_b.width)*(1+(_lobZ/100)*0.5));_b.setDepth(10+_lobZ*0.05);}
+        if(_lobZ<=0){_lobZ=0;_lobVZ=0;_lobOn=false;_b.setScale(1).setDepth(5);}
+        else{_b.setScale(1+((_lobZ/100)*0.5));_b.setDepth(10+_lobZ*0.05);}
     }
 
     // Courbe balle
-    if(!_lobOn&&_curve!==0&&_b.body.speed>50){
-        const bvx=_b.body.velocity.x,bvy=_b.body.velocity.y,len=Math.sqrt(bvx*bvx+bvy*bvy);
-        if(len>10){const ac=150+_efxVal*(500-150);_b.body.velocity.x+=(-bvy/len*_curve)*ac*dt*Math.min(1,_b.body.speed/200);_b.body.velocity.y+=(bvx/len*_curve)*ac*dt*Math.min(1,_b.body.speed/200);}
+    if(!_lobOn&&_curve!==0&&0>50){
+        const bvx=0,bvy=0,len=Math.sqrt(bvx*bvx+bvy*bvy);
+        if(len>10){const ac=150+_efxVal*(500-150);0+=(-bvy/len*_curve)*ac*dt*Math.min(1,0/200);0+=(bvx/len*_curve)*ac*dt*Math.min(1,0/200);}
     }
     if(!_lobOn){
-        _b.setRotation(_b.rotation+_b.body.velocity.x*0.002);
-        if(_b.body.speed<15){_curve=0;_efxVal=0;}
+        _b.setRotation(_b.rotation+0*0.002);
+        if(0<15){_curve=0;_efxVal=0;}
     }
 
     // Remotes
@@ -458,15 +451,8 @@ function _update(time,delta){
     if(_p.y > GH+80) _p.setVelocityY(Math.min(0,_p.body.velocity.y));
     if(_pTxt)_pTxt.setPosition(_p.x,_p.y-PS/2-4);
 
-    // Mise à jour visuelle + physique des gardiens
-    if(_goalie_r){
-        _goalie_r.setY(_goalie_r_y);
-        _goalie_r.body.reset(50, _goalie_r_y);
-    }
-    if(_goalie_b){
-        _goalie_b.setY(_goalie_b_y);
-        _goalie_b.body.reset(950, _goalie_b_y);
-    }
+    if(_goalie_r) _goalie_r.setY(_goalie_r_y);
+    if(_goalie_b) _goalie_b.setY(_goalie_b_y);
 
     // Réseau
     _netT+=delta;
@@ -481,12 +467,19 @@ function _update(time,delta){
             if(rd<distToBall) isBallAuthority=false;
         });
         if(isBallAuthority){
-            _sock?.emit('ball_update',{x:Math.round(_b.x),y:Math.round(_b.y),vx:Math.round(_b.body.velocity.x),vy:Math.round(_b.body.velocity.y)});
+            _sock?.emit('ball_update',{x:Math.round(_b.x),y:Math.round(_b.y),vx:Math.round(0),vy:Math.round(0)});
         }
     }
 
+    // Détection contact joueur/balle (distance)
+    if(_b && _p && !_dOn && !_gCD){
+        const dx=_b.x-_p.x, dy=_b.y-_p.y;
+        const dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist < 30){
+            _sock?.emit('ball_touch',{px:Math.round(_p.x),py:Math.round(_p.y)});
+        }
+    }
     _updUI();
-    if(!_gCD)_checkGoals(this);
 }
 
 // ── TIRS VERS CURSEUR ───────────────────────────
@@ -572,7 +565,8 @@ function _animDrib(){
         else if(_dPhase===1){tx=_p.x+Math.cos(_ang+Math.PI)*18*t+Math.cos(pL)*18*(1-t);ty=_p.y+Math.sin(_ang+Math.PI)*18*t+Math.sin(pL)*18*(1-t);}
         else{tx=_p.x+Math.cos(_ang)*36*t;ty=_p.y+Math.sin(_ang)*36*t;}
     }else{tx=_p.x+Math.cos(_ang)*30;ty=_p.y+Math.sin(_ang)*30;}
-    _b.setPosition(tx,ty);_b.setVelocity(0,0);
+    _b.setPosition(tx,ty);
+    _sock?.emit('ball_drib',{x:Math.round(tx),y:Math.round(ty)});
 }
 function _endDrib(){
     _becomeMaster();
@@ -601,7 +595,7 @@ function _goalEvt(scene,team,name){
 }
 function _resetPos(){
     if(!_b||!_p)return;
-    _b.setPosition(SPAWN_BALL.x,SPAWN_BALL.y).setVelocity(0,0).setDrag(55).setScale(BS/_b.width).setDepth(5).setAlpha(1);
+    _b.setPosition(SPAWN_BALL.x,SPAWN_BALL.y).setVelocity(0,0).setScale(BS/_b.width).setDepth(5).setAlpha(1);
     const sp=_team==='rouge'?SPAWN_R:SPAWN_B;
     _p.setPosition(sp.x,sp.y).setVelocity(0,0).setDisplaySize(PS,PS);
     _lobOn=false;_lobZ=0;_dOn=false;_shootCD=false;_celeb=false;
