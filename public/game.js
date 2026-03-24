@@ -282,11 +282,29 @@ function _setupSock(scene,socket){
         }
     });
     socket.on('goal_scored',({team,scores,scorerPseudo})=>{
-        _sR=scores.rouge;_sB=scores.bleu;
-        if(_sTxt)_sTxt.setText(_sR+'  -  '+_sB);
-        _goalEvt(scene,team,scorerPseudo);
+        _sR=scores.rouge; _sB=scores.bleu;
+        if(_sTxt) _sTxt.setText(_sR+'  -  '+_sB);
+        _goalEvt(scene, team, scorerPseudo);
     });
-    socket.on('ball_reset',data=>{ if(_b)_b.setPosition(data.x,data.y).setVelocity(0,0); });
+
+    // Le serveur dit quand remettre la balle au centre
+    socket.on('ball_reset', data => {
+        if(!_b) return;
+        _b.setPosition(data.x, data.y).setVelocity(0,0);
+        // Reset complet
+        _lobOn=false; _lobZ=0; _dOn=false;
+        _isChargingPow=false; _isChargingEff=false; _isChargingLob=false;
+        _chargePow=0; _chargeEff=0; _chargeLob=0; _curve=0;
+        _shootCD=false;
+        if(_p){
+            const sp=_team==='rouge'?SPAWN_R:SPAWN_B;
+            _p.setPosition(sp.x, sp.y).setVelocity(0,0);
+        }
+        _goalie_r_y=290; _goalie_b_y=290;
+        _gCD=false;
+        _celeb=false;
+        if(_rTxt) _rTxt.setText('');
+    });
     socket.on('player_left',({id})=>{ if(_remotes[id]){try{_remotes[id].s.destroy();}catch(e){}try{_remotes[id].l.destroy();}catch(e){} delete _remotes[id];} });
     socket.on('emote',({id,emote,pseudo})=>{
         // Affiche l'emote au dessus du joueur distant
@@ -572,10 +590,14 @@ function _checkGoals(scene){
     // balle ne sort plus (collideWorldBounds=true)
 }
 function _goalEvt(scene,team,name){
-    _gCD=true;_b.setVelocity(0,0);_p.setVelocity(0,0);
-    _lobOn=false;_dOn=false;_isChargingPow=false;_isChargingEff=false;_isChargingLob=false;
-    _chargePow=0;_chargeEff=0;_chargeLob=0;_curve=0;
-    _doCeleb(scene,team,name||_pseudo);
+    _gCD=true;
+    if(_b) _b.setVelocity(0,0);
+    if(_p) _p.setVelocity(0,0);
+    _lobOn=false; _dOn=false;
+    _isChargingPow=false; _isChargingEff=false; _isChargingLob=false;
+    _chargePow=0; _chargeEff=0; _chargeLob=0; _curve=0;
+    _doCeleb(scene, team, name||_pseudo);
+    // NE PAS appeler _resetPos ici — on attend ball_reset du serveur
 }
 function _resetPos(){
     if(!_b||!_p)return;
@@ -636,7 +658,7 @@ function _doCeleb(scene,team,name){
     const cols=[0xffdd00,0xff4444,0x44aaff,0xffffff,0xff8800,0x44dd44];
     for(let i=0;i<20;i++){const cx=Phaser.Math.Between(40,GW-40);const cf=scene.add.graphics().setDepth(29);cf.fillStyle(Phaser.Utils.Array.GetRandom(cols),1);cf.fillRect(0,0,Phaser.Math.Between(5,10),Phaser.Math.Between(5,10));cf.setPosition(cx,-10);scene.tweens.add({targets:cf,y:GH+20,x:cx+Phaser.Math.Between(-60,60),angle:Phaser.Math.Between(0,360),duration:Phaser.Math.Between(800,1600),delay:Phaser.Math.Between(0,400)});_cObjs.push(cf);}
     scene.tweens.add({targets:_p,scaleX:(PS/_p.width)*1.2,scaleY:(PS/_p.height)*1.2,yoyo:true,repeat:3,duration:140});
-    scene.time.delayedCall(2500,()=>{_cObjs.forEach(o=>o.destroy());_cObjs=[];_celeb=false;_resetPos();});
+    scene.time.delayedCall(2500,()=>{_cObjs.forEach(o=>o.destroy());_cObjs=[];_celeb=false;});
 }
 
 // ── UI JAUGES ───────────────────────────────────
