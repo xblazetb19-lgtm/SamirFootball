@@ -80,10 +80,22 @@ io.on('connection', socket => {
         G.goalLock = true;
         if (team === 'rouge') G.scores.rouge++;
         else G.scores.bleu++;
+
+        // Reset balle immédiatement côté serveur
         G.ball = { x:500, y:290, vx:0, vy:0 };
         G.goalies = { rouge:290, bleu:290 };
-        io.emit('goal_scored', { team, scores: G.scores, scorerPseudo });
+
+        // Annonce but avec scores à jour à TOUT le monde
+        io.emit('goal_scored', {
+            team,
+            scores: { rouge: G.scores.rouge, bleu: G.scores.bleu },
+            scorerPseudo
+        });
+
+        // Remet la balle après la célébration
         setTimeout(() => {
+            G.ball = { x:500, y:290, vx:0, vy:0 };
+            G.goalies = { rouge:290, bleu:290 };
             io.emit('ball_reset', G.ball);
             G.goalLock = false;
         }, 2800);
